@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from cloudinary.models import CloudinaryField
 
 class Category(models.Model):
     """Task categories"""
@@ -93,7 +94,7 @@ class Task(models.Model):
 
 class TaskAttachment(models.Model):
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='attachments')
-    file = models.FileField(upload_to='task_attachments/')
+    file = CloudinaryField(resource_type='raw',folder='task_attachments',null=True,blank=True)
     filename = models.CharField(max_length=255, blank=True)
     file_type = models.CharField(max_length=50, blank=True)
     file_size = models.IntegerField(default=0)

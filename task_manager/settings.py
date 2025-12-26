@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     'django_celery_beat',
     'django_celery_results',
     'cloudinary',
+    'cloudinary_storage',
 ]
 
 # Celery Beat Configuration (Periodic Tasks এর জন্য)
