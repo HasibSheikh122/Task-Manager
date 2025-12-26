@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+
+{% block title %}Notifications - Task Manager{% endblock %}
+{% block header %}Notifications{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Notifications</li>
+{% endblock %}
+
+{% block header_buttons %}
+<div class="btn-toolbar mb-2 mb-md-0">
+    {% if notifications %}
+    <div class="btn-group me-2">
+        <a href="{% url 'mark_all_notifications_read' %}" class="btn btn-outline-success">
+            <i class="fas fa-check-double"></i> Mark All as Read
+        </a>
+        <a href="{% url 'clear_all_notifications' %}" class="btn btn-outline-danger">
+            <i class="fas fa-trash"></i> Clear All
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-bell"></i> Notifications
+                    <span class="badge bg-primary ms-2">{{ notifications.count }}</span>
+                </h6>
+                <div class="dropdown no-arrow">
+                    <a class="dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in">
+                        <a class="dropdown-item" href="{% url 'mark_all_notifications_read' %}">
+                            <i class="fas fa-check-double text-success"></i> Mark All as Read
+                        </a>
+                        <a class="dropdown-item" href="{% url 'clear_all_notifications' %}">
+                            <i class="fas fa-trash text-danger"></i> Clear All Notifications
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="{% url 'dashboard' %}">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-body">
+                {% if notifications %}
+                <div class="list-group">
+                    {% for notification in notifications %}
+                    <a href="{% if notification.related_url %}{{ notification.related_url }}{% else %}#{% endif %}" 
+                       class="list-group-item list-group-item-action {% if not notification.is_read %}bg-light{% endif %}">
+                        <div class="d-flex w-100 justify-content-between">
+                            <div class="d-flex">
+                                <div class="me-3">
+                                    <i class="{{ notification.icon }} fa-lg"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">{{ notification.title }}</h6>
+                                    <p class="mb-1">{{ notification.message }}</p>
+                                    <small class="text-muted">
+                                        <i class="far fa-clock"></i> {{ notification.created_at|timesince }} ago
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                {% if not notification.is_read %}
+                                <span class="badge bg-primary">New</span>
+                                {% endif %}
+                                <div class="mt-2">
+                                    <a href="{% url 'mark_notification_read' notification.pk %}" 
+                                       class="btn btn-sm btn-outline-success">
+                                        <i class="fas fa-check"></i>
+                                    </a>
+                                    <a href="{% url 'delete_notification' notification.pk %}" 
+                                       class="btn btn-sm btn-outline-danger"
+                                       onclick="return confirm('Are you sure you want to delete this notification?')">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+                
+                <!-- Pagination -->
+                {% if notifications.has_other_pages %}
+                <nav aria-label="Page navigation" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if notifications.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1" aria-label="First">
+                                <span aria-hidden="true">&laquo;&laquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ notifications.previous_page_number }}" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for num in notifications.paginator.page_range %}
+                            {% if notifications.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                            {% elif num > notifications.number|add:'-3' and num < notifications.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                            </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if notifications.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ notifications.next_page_number }}" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ notifications.paginator.num_pages }}" aria-label="Last">
+                                <span aria-hidden="true">&raquo;&raquo;</span>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-bell-slash fa-4x text-muted mb-3"></i>
+                    <h4 class="text-muted">No notifications</h4>
+                    <p class="text-muted">You're all caught up! Check back later for new notifications.</p>
+                    <a href="{% url 'dashboard' %}" class="btn btn-primary mt-3">
+                        <i class="fas fa-tachometer-alt"></i> Go to Dashboard
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

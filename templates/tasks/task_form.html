@@ -1,0 +1,519 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ title|default:'Create Task' }} - Task Manager{% endblock %}
+{% block header %}{{ title|default:'Create New Task' }}{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+<li class="breadcrumb-item"><a href="{% url 'task_list' %}">Tasks</a></li>
+<li class="breadcrumb-item active">{{ title|default:'Create' }}</li>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-{{ task|yesno:'edit,plus' }}"></i> 
+                    {{ title|default:'Create New Task' }}
+                </h6>
+            </div>
+            <div class="card-body">
+                <form method="post" id="taskForm">
+                    {% csrf_token %}
+                    
+                    <!-- Display form errors -->
+                    {% if form.errors %}
+                    <div class="alert alert-danger">
+                        <h6><i class="fas fa-exclamation-circle"></i> Please fix the following errors:</h6>
+                        <ul class="mb-0">
+                            {% for field in form %}
+                                {% for error in field.errors %}
+                                <li>{{ field.label }}: {{ error }}</li>
+                                {% endfor %}
+                            {% endfor %}
+                            {% for error in form.non_field_errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Debug Info (remove in production) -->
+                    {% if debug %}
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-bug"></i> Debug Info:</h6>
+                        <p>Categories count: {{ form.category.field.queryset.count }}</p>
+                        <p>User: {{ request.user.username }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Title Field -->
+                    <div class="mb-3">
+                        <label for="id_title" class="form-label">
+                            <i class="fas fa-heading"></i> Title *
+                        </label>
+                        <input type="text" 
+                               name="title" 
+                               id="id_title" 
+                               class="form-control {% if form.title.errors %}is-invalid{% endif %}" 
+                               value="{{ form.title.value|default:'' }}"
+                               placeholder="Enter task title"
+                               required>
+                        {% if form.title.errors %}
+                        <div class="invalid-feedback">
+                            {{ form.title.errors.0 }}
+                        </div>
+                        {% endif %}
+                        <small class="form-text text-muted">
+                            Enter a clear and descriptive title for your task
+                        </small>
+                    </div>
+                    
+                    <!-- Description Field -->
+                    <div class="mb-3">
+                        <label for="id_description" class="form-label">
+                            <i class="fas fa-align-left"></i> Description
+                        </label>
+                        <textarea name="description" 
+                                  id="id_description" 
+                                  class="form-control {% if form.description.errors %}is-invalid{% endif %}" 
+                                  rows="4"
+                                  placeholder="Enter task description">{{ form.description.value|default:'' }}</textarea>
+                        {% if form.description.errors %}
+                        <div class="invalid-feedback">
+                            {{ form.description.errors.0 }}
+                        </div>
+                        {% endif %}
+                        <small class="form-text text-muted">
+                            Provide detailed information about the task (optional)
+                        </small>
+                    </div>
+                    
+                    <div class="row">
+                        <!-- Status Field -->
+                        <div class="col-md-6 mb-3">
+                            <label for="id_status" class="form-label">
+                                <i class="fas fa-tasks"></i> Status *
+                            </label>
+                            <select name="status" 
+                                    id="id_status" 
+                                    class="form-control {% if form.status.errors %}is-invalid{% endif %}" 
+                                    required>
+                                <option value="">Select status</option>
+                                <option value="pending" {% if form.status.value == 'pending' %}selected{% endif %}>Pending</option>
+                                <option value="in_progress" {% if form.status.value == 'in_progress' %}selected{% endif %}>In Progress</option>
+                                <option value="completed" {% if form.status.value == 'completed' %}selected{% endif %}>Completed</option>
+                            </select>
+                            {% if form.status.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.status.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Priority Field -->
+                        <div class="col-md-6 mb-3">
+                            <label for="id_priority" class="form-label">
+                                <i class="fas fa-exclamation-circle"></i> Priority *
+                            </label>
+                            <select name="priority" 
+                                    id="id_priority" 
+                                    class="form-control {% if form.priority.errors %}is-invalid{% endif %}" 
+                                    required>
+                                <option value="">Select priority</option>
+                                <option value="low" {% if form.priority.value == 'low' %}selected{% endif %}>Low</option>
+                                <option value="medium" {% if form.priority.value == 'medium' %}selected{% endif %}>Medium</option>
+                                <option value="high" {% if form.priority.value == 'high' %}selected{% endif %}>High</option>
+                            </select>
+                            {% if form.priority.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.priority.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <!-- Category Field -->
+                        <div class="col-md-6 mb-3">
+                            <label for="id_category" class="form-label">
+                                <i class="fas fa-folder"></i> Category
+                            </label>
+                            <select name="category" 
+                                    id="id_category" 
+                                    class="form-control {% if form.category.errors %}is-invalid{% endif %}">
+                                <option value="">Select a category (optional)</option>
+                                {% for category in form.category.field.queryset %}
+                                <option value="{{ category.id }}" 
+                                        {% if form.category.value == category.id|stringformat:'i' %}selected{% endif %}
+                                        style="background-color: {{ category.color }}20;">
+                                    {{ category.name }} {% if category.user %}(Personal){% else %}(Global){% endif %}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            {% if form.category.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.category.errors.0 }}
+                            </div>
+                            {% endif %}
+                            <small class="form-text text-muted">
+                                <a href="{% url 'create_category' %}" class="text-decoration-none" target="_blank">
+                                    <i class="fas fa-plus"></i> Create new category
+                                </a>
+                            </small>
+                        </div>
+                        
+                        <!-- Due Date Field -->
+                        <div class="col-md-6 mb-3">
+                            <label for="due_date" class="form-label">
+                                <i class="fas fa-calendar"></i> Due Date
+                            </label>
+                            <input type="datetime-local" 
+                                   name="due_date" 
+                                   id="due_date" 
+                                   class="form-control {% if form.due_date.errors %}is-invalid{% endif %}" 
+                                   value="{{ form.due_date.value|default:'' }}">
+                            {% if form.due_date.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.due_date.errors.0 }}
+                            </div>
+                            {% endif %}
+                            <small class="form-text text-muted">
+                                Set a deadline for this task (optional)
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'task_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            {% if task %}
+                            <i class="fas fa-save"></i> Update Task
+                            {% else %}
+                            <i class="fas fa-plus"></i> Create Task
+                            {% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Categories Preview -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-folder"></i> Available Categories
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if form.category.field.queryset %}
+                <div class="row">
+                    {% for category in form.category.field.queryset %}
+                    <div class="col-md-3 mb-2">
+                        <div class="category-badge p-2 rounded text-center" 
+                             style="background-color: {{ category.color }}20; border-left: 4px solid {{ category.color }};">
+                            <small>
+                                <i class="fas fa-folder" style="color: {{ category.color }}"></i>
+                                {{ category.name }}
+                            </small>
+                            <br>
+                            <small class="text-muted">
+                                {% if category.user %}
+                                <i class="fas fa-user"></i> Personal
+                                {% else %}
+                                <i class="fas fa-globe"></i> Global
+                                {% endif %}
+                            </small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-3">
+                    <i class="fas fa-folder-open fa-2x text-muted mb-2"></i>
+                    <p class="text-muted">No categories found.</p>
+                    <a href="{% url 'create_category' %}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-plus"></i> Create Your First Category
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Task Preview Card (for new tasks) -->
+        {% if not task %}
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-eye"></i> Task Preview
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="task-preview">
+                    <h5 id="previewTitle" class="text-muted">Task Title</h5>
+                    <p id="previewDescription" class="text-muted">Task description will appear here...</p>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <strong>Status:</strong>
+                            <span id="previewStatus" class="badge bg-warning">Pending</span>
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Priority:</strong>
+                            <span id="previewPriority" class="badge bg-secondary">Medium</span>
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Category:</strong>
+                            <span id="previewCategory" class="text-muted">None</span>
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Due Date:</strong>
+                            <span id="previewDueDate" class="text-muted">Not set</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Get form elements
+    const titleInput = document.getElementById('id_title');
+    const descriptionInput = document.getElementById('id_description');
+    const statusInput = document.getElementById('id_status');
+    const priorityInput = document.getElementById('id_priority');
+    const categoryInput = document.getElementById('id_category');
+    const dueDateInput = document.getElementById('due_date');
+    
+    // Get preview elements
+    const previewTitle = document.getElementById('previewTitle');
+    const previewDescription = document.getElementById('previewDescription');
+    const previewStatus = document.getElementById('previewStatus');
+    const previewPriority = document.getElementById('previewPriority');
+    const previewCategory = document.getElementById('previewCategory');
+    const previewDueDate = document.getElementById('previewDueDate');
+    
+    // Category colors mapping
+    const categoryColors = {};
+    {% for category in form.category.field.queryset %}
+    categoryColors[{{ category.id }}] = '{{ category.color }}';
+    {% endfor %}
+    
+    // Update preview function
+    function updatePreview() {
+        // Update title
+        if (titleInput && previewTitle) {
+            previewTitle.textContent = titleInput.value || 'Task Title';
+            previewTitle.className = titleInput.value ? 'text-dark' : 'text-muted';
+        }
+        
+        // Update description
+        if (descriptionInput && previewDescription) {
+            previewDescription.textContent = descriptionInput.value || 'Task description will appear here...';
+            previewDescription.className = descriptionInput.value ? 'text-dark' : 'text-muted';
+        }
+        
+        // Update status
+        if (statusInput && previewStatus) {
+            const statusValue = statusInput.value;
+            const statusMap = {
+                'pending': { text: 'Pending', class: 'bg-warning' },
+                'in_progress': { text: 'In Progress', class: 'bg-info' },
+                'completed': { text: 'Completed', class: 'bg-success' }
+            };
+            const status = statusMap[statusValue] || { text: 'Pending', class: 'bg-warning' };
+            previewStatus.textContent = status.text;
+            previewStatus.className = 'badge ' + status.class;
+        }
+        
+        // Update priority
+        if (priorityInput && previewPriority) {
+            const priorityValue = priorityInput.value;
+            const priorityMap = {
+                'low': { text: 'Low', class: 'bg-success' },
+                'medium': { text: 'Medium', class: 'bg-secondary' },
+                'high': { text: 'High', class: 'bg-danger' }
+            };
+            const priority = priorityMap[priorityValue] || { text: 'Medium', class: 'bg-secondary' };
+            previewPriority.textContent = priority.text;
+            previewPriority.className = 'badge ' + priority.class;
+        }
+        
+        // Update category
+        if (categoryInput && previewCategory) {
+            const selectedOption = categoryInput.options[categoryInput.selectedIndex];
+            if (categoryInput.value && selectedOption) {
+                previewCategory.textContent = selectedOption.text.split(' (')[0]; // Remove (Personal)/(Global)
+                previewCategory.className = 'text-dark';
+                
+                // Apply category color
+                const categoryId = categoryInput.value;
+                if (categoryColors[categoryId]) {
+                    previewCategory.style.color = categoryColors[categoryId];
+                    previewCategory.innerHTML = `<i class="fas fa-folder"></i> ${previewCategory.textContent}`;
+                }
+            } else {
+                previewCategory.textContent = 'None';
+                previewCategory.className = 'text-muted';
+                previewCategory.style.color = '';
+                previewCategory.innerHTML = 'None';
+            }
+        }
+        
+        // Update due date
+        if (dueDateInput && previewDueDate) {
+            if (dueDateInput.value) {
+                const date = new Date(dueDateInput.value);
+                previewDueDate.textContent = date.toLocaleDateString('en-US', {
+                    weekday: 'short',
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                previewDueDate.className = 'text-dark';
+            } else {
+                previewDueDate.textContent = 'Not set';
+                previewDueDate.className = 'text-muted';
+            }
+        }
+    }
+    
+    // Add event listeners
+    if (titleInput) titleInput.addEventListener('input', updatePreview);
+    if (descriptionInput) descriptionInput.addEventListener('input', updatePreview);
+    if (statusInput) statusInput.addEventListener('change', updatePreview);
+    if (priorityInput) priorityInput.addEventListener('change', updatePreview);
+    if (categoryInput) categoryInput.addEventListener('change', updatePreview);
+    if (dueDateInput) dueDateInput.addEventListener('change', updatePreview);
+    
+    // Set minimum date for due date to today
+    if (dueDateInput) {
+        const today = new Date();
+        const timezoneOffset = today.getTimezoneOffset() * 60000;
+        const localISOTime = new Date(today - timezoneOffset).toISOString().slice(0, 16);
+        dueDateInput.min = localISOTime;
+    }
+    
+    // Auto-focus on title field for new tasks
+    {% if not task %}
+    if (titleInput) {
+        titleInput.focus();
+    }
+    {% endif %}
+    
+    // Initial preview update
+    updatePreview();
+    
+    // Form validation
+    const form = document.getElementById('taskForm');
+    form.addEventListener('submit', function(event) {
+        let isValid = true;
+        
+        // Clear previous error states
+        const errorElements = form.querySelectorAll('.is-invalid');
+        errorElements.forEach(el => el.classList.remove('is-invalid'));
+        
+        // Validate title
+        if (!titleInput.value.trim()) {
+            titleInput.classList.add('is-invalid');
+            isValid = false;
+        }
+        
+        // Validate status
+        if (!statusInput.value) {
+            statusInput.classList.add('is-invalid');
+            isValid = false;
+        }
+        
+        // Validate priority
+        if (!priorityInput.value) {
+            priorityInput.classList.add('is-invalid');
+            isValid = false;
+        }
+        
+        if (!isValid) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            // Show error message
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-danger alert-dismissible fade show mt-3';
+            alertDiv.innerHTML = `
+                <i class="fas fa-exclamation-circle"></i>
+                Please fill in all required fields marked with *.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            form.prepend(alertDiv);
+            
+            // Scroll to first error
+            const firstError = form.querySelector('.is-invalid');
+            if (firstError) {
+                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstError.focus();
+            }
+        }
+    });
+    
+    // Remove validation styling on input
+    [titleInput, statusInput, priorityInput].forEach(input => {
+        if (input) {
+            input.addEventListener('input', function() {
+                if (this.value.trim()) {
+                    this.classList.remove('is-invalid');
+                }
+            });
+        }
+    });
+});
+</script>
+
+<style>
+.category-badge {
+    transition: transform 0.2s;
+    cursor: pointer;
+}
+
+.category-badge:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+select option {
+    padding: 8px;
+}
+
+/* Style for selected category option */
+select option:checked {
+    background-color: var(--category-color) !important;
+    color: white;
+}
+
+.task-preview {
+    background-color: #f8f9fa;
+    border: 1px solid #e3e6f0;
+    border-radius: 0.35rem;
+    padding: 1.5rem;
+}
+
+.form-control.is-invalid {
+    border-color: #dc3545;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+}
+
+.form-control.is-invalid:focus {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
+}
+</style>
+{% endblock %}

@@ -1,0 +1,332 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Delete Account - Task Manager{% endblock %}
+{% block header %}Delete Account{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'profile' %}">Profile</a></li>
+<li class="breadcrumb-item active">Delete Account</li>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow mb-4 border-danger">
+            <div class="card-header py-3 bg-danger text-white">
+                <h6 class="m-0 font-weight-bold">
+                    <i class="fas fa-exclamation-triangle"></i> Permanent Account Deletion
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <i class="fas fa-user-slash fa-4x text-danger mb-3"></i>
+                    <h3 class="text-danger">Delete Your Account</h3>
+                    <p class="lead">This action cannot be undone. Please read carefully.</p>
+                </div>
+                
+                <!-- Account Statistics -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6 class="m-0 font-weight-bold text-primary">
+                            <i class="fas fa-chart-bar"></i> Your Account Data
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-4 mb-3">
+                                <div class="card border-primary">
+                                    <div class="card-body">
+                                        <i class="fas fa-tasks fa-2x text-primary mb-2"></i>
+                                        <h5>Tasks</h5>
+                                        <p class="mb-0">{{ total_tasks }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="card border-info">
+                                    <div class="card-body">
+                                        <i class="fas fa-folder fa-2x text-info mb-2"></i>
+                                        <h5>Categories</h5>
+                                        <p class="mb-0">{{ total_categories }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="card border-warning">
+                                    <div class="card-body">
+                                        <i class="fas fa-user fa-2x text-warning mb-2"></i>
+                                        <h5>Account</h5>
+                                        <p class="mb-0">{{ user.date_joined|date:"M d, Y" }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Warning Messages -->
+                <div class="alert alert-danger">
+                    <h5 class="alert-heading">
+                        <i class="fas fa-exclamation-circle"></i> Warning: Permanent Data Loss
+                    </h5>
+                    <p class="mb-2">
+                        Deleting your account will <strong>permanently remove</strong>:
+                    </p>
+                    <ul class="mb-2">
+                        <li>All your tasks ({{ total_tasks }} items)</li>
+                        <li>All your categories ({{ total_categories }} items)</li>
+                        <li>All task attachments and files</li>
+                        <li>All notifications and activity history</li>
+                        <li>Your profile information and settings</li>
+                    </ul>
+                    <p class="mb-0">
+                        <strong>This action cannot be undone.</strong> Once deleted, you cannot recover your data.
+                    </p>
+                </div>
+                
+                <!-- Alternative Options -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6 class="m-0 font-weight-bold text-primary">
+                            <i class="fas fa-lightbulb"></i> Consider These Alternatives
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="d-flex">
+                                    <div class="flex-shrink-0">
+                                        <i class="fas fa-user-cog fa-2x text-primary"></i>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <h6>Update Profile</h6>
+                                        <p class="mb-0">Update your profile information instead</p>
+                                        <a href="{% url 'profile' %}" class="btn btn-sm btn-outline-primary mt-2">
+                                            Go to Profile
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="d-flex">
+                                    <div class="flex-shrink-0">
+                                        <i class="fas fa-key fa-2x text-warning"></i>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <h6>Change Password</h6>
+                                        <p class="mb-0">Update your password for security</p>
+                                        <a href="{% url 'password_change' %}" class="btn btn-sm btn-outline-warning mt-2">
+                                            Change Password
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Confirmation Form -->
+                <div class="card border-danger">
+                    <div class="card-header bg-danger text-white">
+                        <h6 class="m-0 font-weight-bold">
+                            <i class="fas fa-check-circle"></i> Confirm Deletion
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" action="{% url 'account_delete_confirm' %}" id="deleteAccountForm">
+                            {% csrf_token %}
+                            
+                            <div class="alert alert-warning">
+                                <i class="fas fa-info-circle"></i>
+                                To confirm account deletion, please enter your password and check all boxes below.
+                            </div>
+                            
+                            <!-- Password Confirmation -->
+                            <div class="mb-4">
+                                <label for="password" class="form-label">
+                                    <i class="fas fa-key"></i> Enter Your Password
+                                </label>
+                                <div class="input-group">
+                                    <input type="password" 
+                                           name="password" 
+                                           id="password" 
+                                           class="form-control" 
+                                           placeholder="Enter your current password"
+                                           required>
+                                    <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <small class="form-text text-muted">
+                                    We need to verify your identity for security reasons.
+                                </small>
+                            </div>
+                            
+                            <!-- Confirmation Checkboxes -->
+                            <div class="mb-4">
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="confirmDataLoss" required>
+                                    <label class="form-check-label text-danger" for="confirmDataLoss">
+                                        <strong>I understand that all my data will be permanently deleted and cannot be recovered.</strong>
+                                    </label>
+                                </div>
+                                
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="confirmTasksLoss" required>
+                                    <label class="form-check-label text-danger" for="confirmTasksLoss">
+                                        <strong>I understand that {{ total_tasks }} tasks and {{ total_categories }} categories will be deleted.</strong>
+                                    </label>
+                                </div>
+                                
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="confirmFinal" required>
+                                    <label class="form-check-label text-danger" for="confirmFinal">
+                                        <strong>I understand that this action is irreversible and I accept full responsibility.</strong>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <!-- Final Warning -->
+                            <div class="alert alert-danger">
+                                <h6 class="alert-heading">
+                                    <i class="fas fa-exclamation-triangle"></i> Final Warning
+                                </h6>
+                                <p class="mb-0">
+                                    After clicking "Delete Account Permanently", your account will be immediately and permanently deleted.
+                                    You will be logged out and redirected to the home page.
+                                </p>
+                            </div>
+                            
+                            <!-- Action Buttons -->
+                            <div class="d-flex justify-content-between">
+                                <a href="{% url 'profile' %}" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left"></i> Cancel & Keep Account
+                                </a>
+                                
+                                <button type="submit" class="btn btn-danger" id="deleteBtn" disabled>
+                                    <i class="fas fa-trash"></i> Delete Account Permanently
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Contact Information -->
+                <div class="mt-4 text-center">
+                    <small class="text-muted">
+                        Need help? <a href="mailto:support@taskmanager.com" class="text-decoration-none">Contact Support</a>
+                        <br>
+                        Having second thoughts? You can always update your profile instead.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Toggle password visibility
+    const togglePassword = document.getElementById('togglePassword');
+    const passwordInput = document.getElementById('password');
+    
+    if (togglePassword && passwordInput) {
+        togglePassword.addEventListener('click', function() {
+            const icon = this.querySelector('i');
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        });
+    }
+    
+    // Get all checkboxes
+    const confirmDataLoss = document.getElementById('confirmDataLoss');
+    const confirmTasksLoss = document.getElementById('confirmTasksLoss');
+    const confirmFinal = document.getElementById('confirmFinal');
+    const deleteBtn = document.getElementById('deleteBtn');
+    const deleteForm = document.getElementById('deleteAccountForm');
+    
+    // Enable/disable delete button
+    function checkDeleteConditions() {
+        const allChecked = confirmDataLoss.checked && 
+                          confirmTasksLoss.checked && 
+                          confirmFinal.checked &&
+                          passwordInput.value.length > 0;
+        
+        deleteBtn.disabled = !allChecked;
+    }
+    
+    // Add event listeners
+    confirmDataLoss.addEventListener('change', checkDeleteConditions);
+    confirmTasksLoss.addEventListener('change', checkDeleteConditions);
+    confirmFinal.addEventListener('change', checkDeleteConditions);
+    passwordInput.addEventListener('input', checkDeleteConditions);
+    
+    // Form submission confirmation
+    deleteForm.addEventListener('submit', function(e) {
+        if (!confirm('Are you absolutely sure? This is your final warning. Your account will be permanently deleted!')) {
+            e.preventDefault();
+            return false;
+        }
+        
+        // Double confirmation
+        const doubleConfirm = confirm('This is the last confirmation. Click OK to permanently delete your account.');
+        if (!doubleConfirm) {
+            e.preventDefault();
+            return false;
+        }
+        
+        // Show loading state
+        deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+        deleteBtn.disabled = true;
+        
+        return true;
+    });
+    
+    // Focus on password field
+    passwordInput.focus();
+});
+</script>
+
+<style>
+.card.border-danger {
+    border-width: 2px;
+}
+
+#deleteBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.form-check-input:checked {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+.alert-danger {
+    border-left: 4px solid #dc3545;
+}
+
+.alert-warning {
+    border-left: 4px solid #ffc107;
+}
+
+.input-group .btn-outline-secondary {
+    border-color: #ced4da;
+}
+
+.input-group .btn-outline-secondary:hover {
+    background-color: #e9ecef;
+    border-color: #ced4da;
+}
+</style>
+{% endblock %}

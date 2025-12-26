@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - Task Manager{% endblock %}
+{% block header %}Welcome to Task Manager{% endblock %}
+
+{% block content %}
+<div class="row container">
+    <div class="col-12 text-center py-5">
+        <h1 class="display-4 mb-4">
+            <i class="fas fa-tasks text-primary"></i> Task Manager
+        </h1>
+        <p class="lead mb-4">
+            Organize your tasks efficiently and boost your productivity
+        </p>
+        
+        {% if not user.is_authenticated %}
+        <div class="mt-5">
+            <a href="{% url 'login' %}" class="btn btn-primary btn-lg me-3">
+                <i class="fas fa-sign-in-alt"></i> Login
+            </a>
+            <a href="{% url 'register' %}" class="btn btn-outline-primary btn-lg">
+                <i class="fas fa-user-plus"></i> Register
+            </a>
+        </div>
+        
+        <div class="row mt-5">
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-bolt fa-3x text-primary mb-3"></i>
+                        <h5>Real-time Updates</h5>
+                        <p>Get instant notifications when tasks are created or updated</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-bell fa-3x text-success mb-3"></i>
+                        <h5>Smart Reminders</h5>
+                        <p>Never miss a deadline with intelligent task reminders</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-chart-line fa-3x text-warning mb-3"></i>
+                        <h5>Progress Tracking</h5>
+                        <p>Monitor your productivity with detailed analytics</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="mt-4">
+            <a href="{% url 'dashboard' %}" class="btn btn-primary btn-lg">
+                <i class="fas fa-tachometer-alt"></i> Go to Dashboard
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

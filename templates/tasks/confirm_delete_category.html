@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Category - Task Manager{% endblock %}
+{% block header %}Delete Category{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+<li class="breadcrumb-item"><a href="{% url 'manage_categories' %}">Categories</a></li>
+<li class="breadcrumb-item active">Delete</li>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-danger">
+                    <i class="fas fa-exclamation-triangle"></i> Confirm Category Deletion
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <i class="fas fa-folder-minus fa-4x text-danger mb-3"></i>
+                    <h4 class="text-danger">Delete "{{ category.name }}" Category?</h4>
+                </div>
+                
+                <!-- Category Details -->
+                <div class="card mb-4">
+                    <div class="card-body text-center">
+                        <span class="badge p-3 mb-3" style="background-color: {{ category.color }}; font-size: 1.2rem;">
+                            <i class="fas fa-folder"></i> {{ category.name }}
+                        </span>
+                        <p class="mb-0">
+                            <strong>{{ category.tasks.count }}</strong> task(s) in this category
+                        </p>
+                    </div>
+                </div>
+                
+                {% if category.tasks.exists %}
+                <!-- Warning if category has tasks -->
+                <div class="alert alert-warning">
+                    <h6 class="alert-heading">
+                        <i class="fas fa-exclamation-triangle"></i> Category in Use
+                    </h6>
+                    <p class="mb-0">
+                        This category contains {{ category.tasks.count }} task(s). 
+                        You cannot delete a category that has tasks assigned to it.
+                    </p>
+                </div>
+                
+                <div class="d-grid">
+                    <a href="{% url 'manage_categories' %}" class="btn btn-primary">
+                        <i class="fas fa-arrow-left"></i> Back to Categories
+                    </a>
+                </div>
+                {% else %}
+                <!-- Delete confirmation -->
+                <div class="alert alert-danger">
+                    <h6 class="alert-heading">
+                        <i class="fas fa-exclamation-circle"></i> Warning
+                    </h6>
+                    <p class="mb-0">
+                        This action cannot be undone. The category will be permanently deleted.
+                    </p>
+                </div>
+                
+                <!-- Delete Form -->
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'manage_categories' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash"></i> Delete Category
+                        </button>
+                    </div>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

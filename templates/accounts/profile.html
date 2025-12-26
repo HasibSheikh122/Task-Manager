@@ -1,0 +1,353 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Profile{% endblock %}
+{% block header %}Profile Settings{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Profile</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <!-- Profile Picture -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-user-circle"></i> Profile Picture</h6>
+            </div>
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <img src="{{ user.profile.profile_picture.url }}" 
+                         alt="Profile Picture" 
+                         class="rounded-circle"
+                         style="width: 150px; height: 150px; object-fit: cover;">
+                </div>
+                <p class="text-muted">
+                    Upload a new profile picture. Max size: 2MB
+                </p>
+            </div>
+        </div>
+        
+        <!-- Account Stats -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-chart-bar"></i> Account Statistics
+                </h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-tasks"></i> Total Tasks</span>
+                        <span class="badge bg-primary rounded-pill">{{ total_tasks }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-check-circle"></i> Completed Tasks</span>
+                        <span class="badge bg-success rounded-pill">{{ completed_tasks }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-clock"></i> Pending Tasks</span>
+                        <span class="badge bg-warning rounded-pill">{{ pending_tasks }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-spinner"></i> In Progress Tasks</span>
+                        <span class="badge bg-info rounded-pill">{{ in_progress_tasks }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-user-clock"></i> Member Since</span>
+                        <span class="text-muted">{{ user.date_joined|date:"M d, Y" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-calendar"></i> Last Login</span>
+                        <span class="text-muted">{{ user.last_login|date:"M d, Y H:i" }}</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-user-edit"></i> Edit Profile</h6>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <fieldset class="mb-4">
+                        <legend class="border-bottom pb-2 mb-3">Account Information</legend>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ u_form.username|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ u_form.email|as_crispy_field }}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ u_form.first_name|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ u_form.last_name|as_crispy_field }}
+                            </div>
+                        </div>
+                    </fieldset>
+                    
+                    <fieldset class="mb-4">
+                        <legend class="border-bottom pb-2 mb-3">Profile Information</legend>
+                        
+                        <div class="mb-3">
+                            <label for="profile_picture" class="form-label">Profile Picture</label>
+                            <div class="input-group">
+                                <input class="form-control" 
+                                       type="file" 
+                                       id="profile_picture" 
+                                       name="profile_picture"
+                                       accept="image/*">
+                            </div>
+                            {% if p_form.profile_picture.errors %}
+                            <div class="text-danger">
+                                {{ p_form.profile_picture.errors.0 }}
+                            </div>
+                            {% endif %}
+                            <small class="form-text text-muted">
+                                Supported formats: JPG, PNG, GIF. Max size: 2MB
+                            </small>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ p_form.phone|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ p_form.address|as_crispy_field }}
+                            </div>
+                        </div>
+                    </fieldset>
+                    
+                    <fieldset class="mb-4">
+                        <legend class="border-bottom pb-2 mb-3">Change Password</legend>
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            You can change your password <a href="{% url 'password_change' %}" class="alert-link">here</a>.
+                        </div>
+                    </fieldset>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Dashboard
+                        </a>
+                        <div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Update Profile
+                            </button>
+                            <button type="button" class="btn btn-outline-danger ms-2" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
+                                <i class="fas fa-trash"></i> Delete Account
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Recent Activity -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-history"></i> Recent Activity
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <small><i class="fas fa-user-plus text-success"></i> Account created</small>
+                            <small class="text-muted">{{ user.date_joined|timesince }} ago</small>
+                        </div>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <small><i class="fas fa-sign-in-alt text-info"></i> Last login</small>
+                            <small class="text-muted">{{ user.last_login|timesince }} ago</small>
+                        </div>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <small><i class="fas fa-tasks text-primary"></i> Total tasks created</small>
+                            <small class="text-muted">{{ total_tasks }}</small>
+                        </div>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <small><i class="fas fa-check text-success"></i> Tasks completed</small>
+                            <small class="text-muted">{{ completed_tasks }} ({% widthratio completed_tasks total_tasks 100 %}%)</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Account Modal -->
+<div class="modal fade" id="deleteAccountModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger">
+                    <i class="fas fa-exclamation-triangle"></i> Delete Account
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <h6 class="alert-heading">Warning: This action cannot be undone!</h6>
+                    <p class="mb-0">
+                        All your data including tasks, notifications, and profile information will be permanently deleted.
+                    </p>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="confirmPassword" class="form-label">
+                        <i class="fas fa-key"></i> Confirm Password
+                    </label>
+                    <input type="password" class="form-control" id="confirmPassword" 
+                           placeholder="Enter your password to confirm" required>
+                </div>
+                
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="confirmDelete">
+                    <label class="form-check-label text-danger" for="confirmDelete">
+                        <strong>I understand that this action cannot be undone and I accept full responsibility.</strong>
+                    </label>
+                </div>
+                
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <strong>Note:</strong> This will delete:
+                    <ul class="mb-0 mt-2">
+                        <li>{{ total_tasks }} tasks</li>
+                        <li>All task attachments</li>
+                        <li>All notifications</li>
+                        <li>Your profile information</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button type="button" class="btn btn-danger" disabled id="deleteAccountBtn">
+                    <a href="{% url 'account_delete' %}">
+                            <i class="fas fa-trash"></i> Delete Account Permanently
+                    </a>
+                    
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Preview profile picture
+document.getElementById('profile_picture').addEventListener('change', function(event) {
+    const file = event.target.files[0];
+    if (file) {
+        // Check file size (2MB = 2 * 1024 * 1024 bytes)
+        if (file.size > 2 * 1024 * 1024) {
+            alert('File size exceeds 2MB limit. Please choose a smaller file.');
+            this.value = '';
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.querySelector('.rounded-circle').src = e.target.result;
+        }
+        reader.readAsDataURL(file);
+    }
+});
+
+// Enable/disable delete account button
+const confirmDeleteCheckbox = document.getElementById('confirmDelete');
+const confirmPasswordInput = document.getElementById('confirmPassword');
+const deleteAccountBtn = document.getElementById('deleteAccountBtn');
+
+function checkDeleteConditions() {
+    const isChecked = confirmDeleteCheckbox.checked;
+    const hasPassword = confirmPasswordInput.value.length > 0;
+    
+    deleteAccountBtn.disabled = !(isChecked && hasPassword);
+}
+
+confirmDeleteCheckbox.addEventListener('change', checkDeleteConditions);
+confirmPasswordInput.addEventListener('input', checkDeleteConditions);
+
+// Delete account action
+deleteAccountBtn.addEventListener('click', function() {
+    if (confirm('Are you absolutely sure you want to permanently delete your account? This action cannot be undone!')) {
+        // Here you would typically make an AJAX call to delete the account
+        alert('Account deletion feature would be implemented here. For security reasons, account deletion requires additional verification.');
+        // window.location.href = "{% url 'account_delete' %}";
+    }
+});
+
+// Form validation
+const form = document.querySelector('form');
+form.addEventListener('submit', function(e) {
+    const fileInput = document.getElementById('profile_picture');
+    if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        // Check file type
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+        if (!allowedTypes.includes(file.type)) {
+            e.preventDefault();
+            alert('Only JPG, PNG, and GIF files are allowed.');
+            fileInput.focus();
+        }
+    }
+});
+</script>
+
+<style>
+.card {
+    border: none;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+}
+
+.card-header {
+    background-color: #f8f9fc;
+    border-bottom: 1px solid #e3e6f0;
+}
+
+.list-group-item {
+    border: none;
+    padding: 0.75rem 0;
+}
+
+.badge {
+    font-size: 0.8rem;
+    padding: 0.35em 0.65em;
+}
+
+.rounded-circle {
+    border: 3px solid #4e73df;
+}
+
+.progress {
+    height: 0.5rem;
+}
+
+.alert {
+    border: none;
+}
+</style>
+{% endblock %}
