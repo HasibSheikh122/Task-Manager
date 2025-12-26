@@ -11,6 +11,12 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 import os
 from pathlib import Path
+import dj_database_url
+from environs import Env
+
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -26,6 +32,7 @@ SECRET_KEY = 'django-insecure-^rauv+htkf*$5k_^5ewvu941@=0z&_rw8w27np--3&syt5$vuf
 DEBUG = True
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+DEBUG = os.environ.get('DEBUG', 'True') == "True"
 
 
 # Application definition
@@ -52,6 +59,7 @@ INSTALLED_APPS = [
     'crispy_bootstrap5',
     'django_celery_beat',
     'django_celery_results',
+    'cloudinary',
 ]
 
 # Celery Beat Configuration (Periodic Tasks এর জন্য)
@@ -100,15 +108,17 @@ CHANNEL_LAYERS = {
 WSGI_APPLICATION = 'task_manager.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/6.0/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+if not DEBUG:
+    DATABASES = {
+        "default": dj_database_url.parse(os.environ.get("DATABASE_URL"))
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
@@ -148,6 +158,16 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
+
+cloudinary.config( 
+    cloud_name = "dszzi2yi7", 
+    api_key = "868532243511837", 
+    api_secret = "0EuOL5tIjktcVIdzsKutdkDjAUY", # Click 'View API Keys' above to copy your API secret
+    secure=True
+)
+
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
